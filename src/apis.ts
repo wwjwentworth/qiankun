@@ -15,30 +15,38 @@ export function registerMicroApps<T extends object = {}>(
   apps: Array<RegistrableApp<T>>,
   lifeCycles?: FrameworkLifeCycles<T>,
 ) {
-  // Each app only needs to be registered once
+  // 防止微应用重新注册
   const unregisteredApps = apps.filter((app) => !microApps.some((registeredApp) => registeredApp.name === app.name));
-
+  // 所有的微应用 = 已注册 + 未注册
   microApps = [...microApps, ...unregisteredApps];
 
   unregisteredApps.forEach((app) => {
+    // name: 微应用名称
+    // activeRule: 激活的路由
+    // props：主应用传递过来的值
     const { name, activeRule, loader = noop, props, ...appConfig } = app;
 
+    // 核心，负责加载微应用，然后一堆处理，最后返回mout,bootstrap,update,unmount这几个声明周期钩子函数
     registerApplication({
-      name,
+      name, // 微应用名称
       app: async () => {
         loader(true);
         await frameworkStartedDefer.promise;
 
-        const { mount, ...otherMicroAppConfigs } = (
-          await loadApp({ name, props, ...appConfig }, frameworkConfiguration, lifeCycles)
-        )();
+        const { mount, ...otherMicroAppConfigs } = await loadApp(
+          { name, props, ...appConfig },
+          frameworkConfiguration,
+          lifeCycles
+        );
 
         return {
           mount: [async () => loader(true), ...toArray(mount), async () => loader(false)],
           ...otherMicroAppConfigs,
         };
       },
+      // 微应用被激活的条件
       activeWhen: activeRule,
+      // 主应用传递给微应用的props
       customProps: props,
     });
   });
@@ -46,6 +54,7 @@ export function registerMicroApps<T extends object = {}>(
 
 const appConfigPromiseGetterMap = new Map<string, Promise<ParcelConfigObjectGetter>>();
 
+// 手动加载微应用
 export function loadMicroApp<T extends object = {}>(
   app: LoadableApp<T>,
   configuration?: FrameworkConfiguration,
@@ -111,10 +120,23 @@ export function loadMicroApp<T extends object = {}>(
 }
 
 export function start(opts: FrameworkConfiguration = {}) {
-  frameworkConfiguration = { prefetch: true, singular: true, sandbox: true, ...opts };
-  const { prefetch, sandbox, singular, urlRerouteOnly, ...importEntryOpts } = frameworkConfiguration;
+  frameworkConfiguration = {
+    prefetch: true,  // 是否预加载，默认为预加载
+    singular: true,  // 是否开启单利模式，默认开启
+    sandbox: true,   // 是否开启沙箱模式，默认开启
+    ...opts
+  };
+  const {
+    prefetch,
+    sandbox,
+    singular,
+    urlRerouteOnly,
+    ...importEntryOpts
+  } = frameworkConfiguration;
 
+  // 预加载
   if (prefetch) {
+    // 执行预加载策略，参数是微应用列表，预加载策略
     doPrefetchStrategy(microApps, prefetch, importEntryOpts);
   }
 
