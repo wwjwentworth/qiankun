@@ -141,9 +141,11 @@ export function start(opts: FrameworkConfiguration = {}) {
   }
 
   if (sandbox) {
+    // 非代理模式下不允许使用沙箱模式
     if (!window.Proxy) {
       console.warn('[qiankun] Miss window.Proxy, proxySandbox will degenerate into snapshotSandbox');
       frameworkConfiguration.sandbox = typeof sandbox === 'object' ? { ...sandbox, loose: true } : { loose: true };
+      // 如果开始沙箱模式，会强制使用单利模式
       if (!singular) {
         console.warn(
           '[qiankun] Setting singular as false may cause unexpected behavior while your browser not support window.Proxy',
