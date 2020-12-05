@@ -118,6 +118,7 @@ export function performanceMeasure(measureName: string, markName: string) {
 }
 
 export function isEnableScopedCSS(sandbox: FrameworkConfiguration['sandbox']) {
+  // 实验性的样式隔离和严格样式隔离不能同时开启
   if (typeof sandbox !== 'object') {
     return false;
   }
