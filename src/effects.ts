@@ -22,6 +22,7 @@ export function setDefaultMountApp(defaultAppLink: string) {
   });
 }
 
+// 这个方法是对setDefaultMountApp兼容的一个方法
 export function runDefaultMountEffects(defaultAppLink: string) {
   console.warn(
     '[qiankun] runDefaultMountEffects will be removed in next version, please use setDefaultMountApp instead',

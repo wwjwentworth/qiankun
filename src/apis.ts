@@ -60,6 +60,8 @@ export function loadMicroApp<T extends object = {}>(
   configuration?: FrameworkConfiguration,
   lifeCycles?: FrameworkLifeCycles<T>,
 ): MicroApp {
+  // props: 初始化时需要传递给微应用的数据
+  // name: 微应用名称
   const { props, name } = app;
 
   const getContainerXpath = (container: string | HTMLElement): string | void => {
@@ -80,12 +82,12 @@ export function loadMicroApp<T extends object = {}>(
   };
 
   /**
-   * using name + container xpath as the micro app instance id,
+   * 使用name+container xpath作为微应用实例的id
    * it means if you rendering a micro app to a dom which have been rendered before,
    * the micro app would not load and evaluate its lifecycles again
    */
   const memorizedLoadingFn = async (): Promise<ParcelConfigObject> => {
-    const { $$cacheLifecycleByAppName } = configuration ?? frameworkConfiguration;
+    const { $$cacheLifecycleByAppName } = configuration || frameworkConfiguration;
     const container = 'container' in app ? app.container : undefined;
 
     if (container) {
@@ -116,7 +118,9 @@ export function loadMicroApp<T extends object = {}>(
     return (await parcelConfigObjectGetterPromise)(container);
   };
 
-  return mountRootParcel(memorizedLoadingFn, { domElement: document.createElement('div'), ...props });
+  return mountRootParcel(memorizedLoadingFn, {
+    domElement: document.createElement('div'), ...props
+  });
 }
 
 export function start(opts: FrameworkConfiguration = {}) {
